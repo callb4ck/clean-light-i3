@@ -1,0 +1,62 @@
+#!/bin/sh
+#
+# ufetch-arch - tiny system info for arch
+#
+# customized by github.com/DumbMahreeo
+
+## INFO
+
+# user is already defined
+host="$(cat /etc/hostname)"
+os='Arch Linux'
+kernel="$(uname -sr)"
+uptime="$(uptime -p | sed 's/up //')"
+packages="$(pacman -Q | wc -l)"
+shell="$(basename "$SHELL")"
+
+## UI DETECTION
+
+ui='unknown'
+uitype='UI'
+[ -n "${DE}" ] && ui="${DE}" && uitype='DE'
+[ -n "${WM}" ] && ui="${WM}" && uitype='WM'
+[ -n "${XDG_CURRENT_DESKTOP}" ]&& ui="${XDG_CURRENT_DESKTOP}" && uitype='DE'
+[ -n "${DESKTOP_SESSION}" ] && ui="${DESKTOP_SESSION}" && uitype='DE'
+[ -f "${HOME}/.xinitrc" ] && ui="$(tail -n 1 "${HOME}/.xinitrc" | cut -d ' ' -f 2)" && uitype='WM'
+[ -f "${HOME}/.xsession" ] && ui="$(tail -n 1 "${HOME}/.xsession" | cut -d ' ' -f 2)" && uitype='WM'
+
+
+## DEFINE COLORS
+
+# probably don't change these
+if [ -x "$(command -v tput)" ]; then
+    bold="$(tput bold)"
+    black="$(tput setaf 0)"
+    red="$(tput setaf 1)"
+    green="$(tput setaf 2)"
+    yellow="$(tput setaf 3)"
+    blue="$(tput setaf 4)"
+    magenta="$(tput setaf 5)"
+    cyan="$(tput setaf 6)"
+    white="$(tput setaf 7)"
+    reset="$(tput sgr0)"
+fi
+
+# you can change these
+lc="${reset}${bold}${blue}"         # labels
+nc="${reset}${bold}${magenta}"      # user and hostname
+lg1="${reset}${bold}${blue}"        # logo color 1
+lg2="${reset}${bold}${cyan}"        # logo color 2
+
+## OUTPUT
+
+cat <<EOF
+${lg2}       /\\         ${nc}${USER}${lc}@${nc}${host}
+${lg2}      /  \\        ${lc}OS:        ${reset}${os}
+${lg2}     /\\   \\       ${lc}KERNEL:    ${reset}${kernel}
+${lg2}    /   ${lg1}   \\      ${lc}UPTIME:    ${reset}${uptime}
+${lg1}   /   ,,   \\     ${lc}PACKAGES:  ${reset}${packages}
+${lg1}  /   |  |  -\\    ${lc}SHELL:     ${reset}${shell}
+${lg1} /_-''    ''-_\\   ${lc}${uitype}:        ${reset}${ui}${reset}
+
+EOF
